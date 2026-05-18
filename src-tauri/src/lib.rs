@@ -1,16 +1,26 @@
+// src-tauri/src/lib.rs
+use std::process::Command;
+
+#[tauri::command]
+fn download_video(video_url: String, download_dir: String) -> Result<String, String> {
+    let output = Command::new("yt-dlp")
+        .arg("-P")
+        .arg(&download_dir)
+        .arg(&video_url)
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => Ok("download completed".into()),
+        Ok(out) => Err(String::from_utf8_lossy(&out.stderr).into_owned()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
-    .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
-      Ok(())
-    })
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::default().build())
+        .invoke_handler(tauri::generate_handler![download_video])
+        .run(tauri::generate_context!())
+        .expect("error running tauri")
 }

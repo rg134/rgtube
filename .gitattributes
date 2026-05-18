@@ -1,2 +1,2 @@
 *.md linguist-detectable
-*.json linguist-detectable
+*.toml linguist-detectable

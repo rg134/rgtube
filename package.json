@@ -15,7 +15,7 @@
     "type": "commonjs",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "run": "npm run tauri dev"
     },
     "devDependencies": {
         "@types/react": "^19.2.14",

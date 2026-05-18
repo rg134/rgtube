@@ -1,0 +1,41 @@
+{
+    "presets": ["@babel/preset-env"],
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "types": ["node"],
+        "moduleResolution": "bundler",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "react",
+        "outDir": "./dist",
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "alwaysStrict": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitAny": false,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "useUnknownInCatchVariables": true,
+        "allowUmdGlobalAccess": true,
+        "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "strictBindCallApply": true
+    },
+    "ts-node": {
+        "esm": true
+    }
+}

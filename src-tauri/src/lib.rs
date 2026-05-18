@@ -20,6 +20,7 @@ fn download_video(video_url: String, download_dir: String) -> Result<String, Str
 pub fn run() -> () {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![download_video])
         .run(tauri::generate_context!())
         .expect("error running tauri")

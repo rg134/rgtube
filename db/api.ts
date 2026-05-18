@@ -5,7 +5,7 @@ import { RGTubeDatabase } from "../interfaces/RGTubeDatabase";
 import { DefaultDB } from "../defaults/DefaultDB";
 import { Settings } from "../interfaces/Settings";
 import { Profile } from "../interfaces/Profile";
-import { Channel } from "@tauri-apps/api/core";
+import { Channel } from "../interfaces/Channel";
 import { Video } from "../interfaces/Video";
 import { Playlist } from "../interfaces/Playlist";
 

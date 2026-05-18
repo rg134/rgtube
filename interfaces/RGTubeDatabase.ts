@@ -1,4 +1,4 @@
-import { Channel } from "@tauri-apps/api/core";
+import { Channel } from "./Channel";
 import { Profile } from "./Profile";
 import { Settings } from "./Settings";
 import { Video } from "./Video";

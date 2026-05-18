@@ -1,9 +1,9 @@
-// src-tauri/src/lib.rs
-use std::process::Command;
+use std::io::Result as IoResult;
+use std::process::{Command, Output};
 
 #[tauri::command]
 fn download_video(video_url: String, download_dir: String) -> Result<String, String> {
-    let output = Command::new("yt-dlp")
+    let output: IoResult<Output> = Command::new("yt-dlp")
         .arg("-P")
         .arg(&download_dir)
         .arg(&video_url)
@@ -17,7 +17,7 @@ fn download_video(video_url: String, download_dir: String) -> Result<String, Str
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+pub fn run() -> () {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::default().build())
         .invoke_handler(tauri::generate_handler![download_video])

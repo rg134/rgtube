@@ -1,0 +1,25 @@
+{
+    "name": "rgtube",
+    "version": "0.0.1",
+    "description": "desktop application for watching youtube in zen mode",
+    "homepage": "https://github.com/rg134/rgtube#readme",
+    "bugs": {
+        "url": "https://github.com/rg134/rgtube/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rg134/rgtube.git"
+    },
+    "license": "MIT",
+    "author": "rg134",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "devDependencies": {
+        "jest": "^30.4.2",
+        "prettier": "^3.8.3",
+        "typescript": "^6.0.3"
+    }
+}

@@ -39,6 +39,14 @@ export async function addProfile(newProfile: Profile): Promise<void> {
     await store.set("profiles", [...(await getProfiles()), ...[newProfile]] satisfies Profile[]);
 }
 
+export async function getChannels(): Promise<Channel[]> {
+    return (await store.get<Channel[]>("channels")) || [];
+}
+
+export async function addChannel(newChannel: Channel): Promise<void> {
+    await store.set("channels", [...(await getChannels()), ...[newChannel]] satisfies Channel[]);
+}
+
 export async function addVideo(newVideo: Video): Promise<void> {
     await store.set("videos", [...((await store.get<Video[]>("videos")) || []), ...[newVideo]]);
 }

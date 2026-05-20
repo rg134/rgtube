@@ -1,0 +1,180 @@
+name: Label Automation Manager
+
+on:
+    issues:
+        types: [opened, edited, assigned, closed, reopened]
+    pull_request:
+        types: [opened, synchronize, closed]
+    pull_request_review:
+        types: [submitted]
+
+jobs:
+    manage-labels:
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+            pull-requests: write
+        steps:
+            - name: Evaluate Labelling Conditions and Apply the New Labels
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const { owner, repo } = context.repo;
+                      const eventName = context.eventName;
+                      const action = context.payload.action;
+                      const payload = context.payload;
+
+                      const statusLabels = [
+                        'Status: Available', 'Status: In Progress', 'Status: Blocked',
+                        'Status: Pending', 'Status: Completed', 'Status: Accepted',
+                        'Status: Abandoned', 'Status: Review Needed', 'Status: Revision Needed'
+                      ];
+
+                      async function manageLabels(number, toAdd = [], removeAllStatus = false, toRemove = []) {
+                        const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: number });
+                        const currentLabels = issue.labels.map(l => l.name);
+
+                        let finalLabels = currentLabels;
+
+                        if (removeAllStatus) {
+                          finalLabels = finalLabels.filter(l => !statusLabels.includes(l));
+                        }
+
+                        finalLabels = finalLabels.filter(l => !toRemove.includes(l));
+
+                        toAdd.forEach(l => {
+                          if (!finalLabels.includes(l)) finalLabels.push(l);
+                        });
+
+                        if (finalLabels.length !== currentLabels.length || toAdd.length > 0) {
+                          await github.rest.issues.setLabels({
+                            owner, repo, issue_number: number, labels: finalLabels
+                          });
+                        }
+                      }
+
+                      function getLinkedIssues(body) {
+                        if (!body) return [];
+                        const regex = /(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)/ig;
+                        const matches = [...body.matchAll(regex)];
+                        return matches.map(m => parseInt(m[1]));
+                      }
+
+                      function isBlocked(body) {
+                        return body && body.toLowerCase().includes('blocked by #');
+                      }
+
+                      if (eventName === 'issues') {
+                        const issue = payload.issue;
+                        const num = issue.number;
+                        const isBot = issue.user.type === 'Bot';
+                        const hasAssignee = issue.assignees && issue.assignees.length > 0;
+                        const isQuestion = issue.labels.some(l => l.name === 'Type: Question');
+                        const hasPriority = issue.labels.some(l => l.name.startsWith('Priority:'));
+
+                        if (action === 'opened') {
+                          let add = [];
+                          
+                          if (!hasPriority && !isQuestion) add.push('Priority: Low');
+
+                          if (!hasAssignee) add.push('Status: Available');
+                          else add.push('Status: In Progress');
+                          
+                          if (isBot) add.push('Type: Maintenance');
+
+                          if (isBlocked(issue.body)) {
+                            add = add.filter(l => !l.startsWith('Status:'));
+                            add.push('Status: Blocked');
+                          }
+                          
+                          await manageLabels(num, add, true);
+                        }
+
+                        if (action === 'edited') {
+                          if (isBlocked(issue.body) && !issue.labels.some(l => l.name === 'Status: Blocked')) {
+                             await manageLabels(num, ['Status: Blocked'], true);
+                          }
+                        }
+
+                        if (action === 'assigned') {
+                           await manageLabels(num, ['Status: In Progress'], false, ['Status: Available']);
+                        }
+
+                        if (action === 'closed') {
+                          if (issue.state_reason === 'not_planned') {
+                            await manageLabels(num, ['Status: Abandoned'], true);
+                          }
+
+                          const query = `repo:${owner}/${repo} is:issue is:open "Blocked by #${num}"`;
+                          const { data: searchResults } = await github.rest.search.issuesAndPullRequests({ q: query });
+                          
+                          for (const blockedIssue of searchResults.items) {
+                            const bNum = blockedIssue.number;
+                            const bHasAssignee = blockedIssue.assignees && blockedIssue.assignees.length > 0;
+                            const newStatus = bHasAssignee ? 'Status: In Progress' : 'Status: Available';
+                            await manageLabels(bNum, [newStatus], false, ['Status: Blocked']);
+                          }
+                        }
+
+                        if (action === 'reopened') {
+                          const newStatus = hasAssignee ? 'Status: In Progress' : 'Status: Available';
+                          await manageLabels(num, [newStatus], false, ['Status: Accepted']);
+                        }
+                      }
+
+                      if (eventName === 'pull_request') {
+                        const pr = payload.pull_request;
+                        const num = pr.number;
+                        const isBot = pr.user.type === 'Bot';
+                        const hasPriority = pr.labels.some(l => l.name.startsWith('Priority:'));
+                        const hasStatus = pr.labels.some(l => l.name.startsWith('Status:'));
+
+                        if (action === 'opened') {
+                          let add = [];
+                          if (!hasPriority) add.push('Priority: Low');
+                          if (!hasStatus) add.push('Status: Review Needed');
+                          if (isBot) add.push('Type: Maintenance');
+                          
+                          await manageLabels(num, add, false);
+
+                          const linked = getLinkedIssues(pr.body);
+                          for (const iNum of linked) {
+                            await manageLabels(iNum, ['Status: Pending'], true);
+                          }
+                        }
+
+                        if (action === 'synchronize') {
+                          await manageLabels(num, ['Status: Review Needed'], false, ['Status: Revision Needed']);
+                        }
+
+                        if (action === 'closed' && pr.merged) {
+                          await manageLabels(num, ['Status: Accepted'], true);
+
+                          const linked = getLinkedIssues(pr.body);
+                          for (const iNum of linked) {
+                            await manageLabels(iNum, ['Status: Accepted'], true);
+                          }
+                        }
+                      }
+
+                      if (eventName === 'pull_request_review' && action === 'submitted') {
+                        const pr = payload.pull_request;
+                        const num = pr.number;
+                        const state = payload.review.state;
+
+                        if (state === 'approved') {
+                          await manageLabels(num, ['Status: Completed'], true);
+
+                          const linked = getLinkedIssues(pr.body);
+                          for (const iNum of linked) {
+                            await manageLabels(iNum, ['Status: Completed'], true);
+                          }
+                        } else if (state === 'changes_requested') {
+                          await manageLabels(num, ['Status: Revision Needed'], true);
+
+                          const linked = getLinkedIssues(pr.body);
+                          for (const iNum of linked) {
+                            await manageLabels(iNum, ['Status: In Progress'], true);
+                          }
+                        }
+                      }

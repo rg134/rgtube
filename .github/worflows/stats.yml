@@ -1,0 +1,16 @@
+name: Pull Request Stats
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+
+jobs:
+    stats:
+        runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write # Needed to post the comment
+        steps:
+            - name: Pull Request Stats
+              uses: flowwer-dev/pull-request-stats@v3.2.3
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}

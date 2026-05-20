@@ -1,0 +1,14 @@
+name: Main
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    placeholder:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Empty step
+              run: echo "This is an empty workflow."

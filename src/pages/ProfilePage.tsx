@@ -10,6 +10,8 @@ import { initDB, getProfiles, addProfile, deleteProfile, updateProfile, getChann
 
 export default function ProfilePage({
     currentTheme,
+    overrideTheme,
+    setOverrideTheme,
     onThemeChange,
     refreshProfiles,
 }: ProfilePageProps): React.JSX.Element {
@@ -68,10 +70,16 @@ export default function ProfilePage({
 
     const startEditing: (profile: Profile) => void = (profile: Profile): void => {
         setEditingProfileId(profile.id);
+        setOverrideTheme(profile.colorScheme);
         setEditNameInput(profile.name);
         setEditDownloadDirInput(profile.downloadDir || "");
         onThemeChange(profile.colorScheme);
     };
+
+    const doneEditing = (): void => {
+        setEditingProfileId(null);
+        setOverrideTheme(null);
+    };1
 
     const saveProfileEdits: (id: string) => Promise<void> = async (id: string): Promise<void> => {
         if (!editNameInput.trim()) {
@@ -80,11 +88,12 @@ export default function ProfilePage({
 
         await updateProfile(id, {
             name: editNameInput.trim(),
-            colorScheme: currentTheme,
+            colorScheme: overrideTheme,
             downloadDir: editDownloadDirInput.trim(),
         });
 
         setEditingProfileId(null);
+        setOverrideTheme(null);
 
         await loadData();
         await refreshProfiles();
@@ -106,6 +115,143 @@ export default function ProfilePage({
 
     if (loading) {
         return <div style={{ color: "var(--text-muted)" }}>loading configs...</div>;
+    }
+
+    const activeProfile = profiles.find((p) => p.id === editingProfileId);
+    if (editingProfileId && activeProfile) {
+        return (
+            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+                <button
+                    className= "primary"
+                    style={{ marginBottom: "10px", cursor: "pointer" }}
+                    onClick={() => 
+                        doneEditing()
+                    }
+                >
+                    back to profiles
+                </button>
+
+                <h2>editing profile</h2>
+
+                <div
+                    style={{
+                        background: "var(--bg)",
+                        padding: "20px",
+                        borderRadius: "8px",
+                        border: `1px solid var(--surface)`,
+                        marginBottom: "24px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                    }}
+                >
+                    <div>
+                        <label style={{ color: "var(--text-muted)" }}>name</label>
+                        <input
+                            type="text"
+                            value={editNameInput}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setEditNameInput(e.target.value)
+                            }
+                        />
+                    </div>
+                    <div>
+                        <label style={{ color: "var(--text-muted)" }}>download dir</label>
+                        <input
+                            type="text"
+                            value={editDownloadDirInput}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setEditDownloadDirInput(e.target.value)
+                            }
+                        />
+                    </div>
+                    <div>
+                        <label style={{ color: "var(--text-muted)" }}>theme</label>
+                        <select
+                            value={overrideTheme}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                setOverrideTheme(e.target.value);
+                            }}
+                        >
+                            {Object.keys(themes).map((key: string) => (
+                                <option
+                                    key={key}
+                                    value={key}
+                                >
+                                    {themes[key].name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <button
+                            className="primary"
+                            onClick={async () => await saveProfileEdits(activeProfile.id)}
+                        >
+                            save profile settings
+                        </button>
+                    </div>
+                </div>
+
+                <h3>manage channels</h3>
+
+                <div
+                    style={{
+                        background: "var(--bg)",
+                        padding: "20px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--surface)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                    }}
+                >
+                    {allChannels.length === 0 ? (
+                        <p style={{ color: "var(--text-muted)" }}>no channels yet</p>
+                    ) : (
+                        allChannels.map((channel) => {
+                            const isAssigned = activeProfile.channelIds.includes(channel.id);
+                            return (
+                                <div
+                                    key={channel.id}
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        padding: "12px",
+                                        border: "2px solid var(--surface)",
+                                        borderRadius: "6px",
+                                        background: "var(--bg)",
+                                    }}
+                                >
+                                    <p>{channel.name}</p>
+
+                                    {isAssigned ? (
+                                        <button
+                                            className="danger"
+                                            onClick={async () =>
+                                                await toggleChannelInProfile(activeProfile, channel.id)
+                                            }
+                                        >
+                                            remove
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="primary"
+                                            onClick={async () =>
+                                                await toggleChannelInProfile(activeProfile, channel.id)
+                                            }
+                                        >
+                                            add
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -130,7 +276,7 @@ export default function ProfilePage({
                         type="text"
                         placeholder="profile name"
                         value={profileNameInput}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>): void =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setProfileNameInput(e.target.value)
                         }
                         style={{ flex: 1, minWidth: "200px" }}
@@ -139,27 +285,23 @@ export default function ProfilePage({
                         type="text"
                         placeholder="default download folder (optional)"
                         value={downloadDirInput}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>): void =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setDownloadDirInput(e.target.value)
                         }
                         style={{ flex: 1, minWidth: "200px" }}
                     />
                     <select
                         value={currentTheme}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void =>
-                            onThemeChange(e.target.value)
-                        }
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onThemeChange(e.target.value)}
                     >
-                        {Object.keys(themes).map(
-                            (key: string): React.JSX.Element => (
-                                <option
-                                    key={key}
-                                    value={key}
-                                >
-                                    {themes[key].name}
-                                </option>
-                            ),
-                        )}
+                        {Object.keys(themes).map((key: string) => (
+                            <option
+                                key={key}
+                                value={key}
+                            >
+                                {themes[key].name}
+                            </option>
+                        ))}
                     </select>
                     <button
                         className="primary"
@@ -173,7 +315,7 @@ export default function ProfilePage({
             <h3>profiles:</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {profiles.map((profile: Profile) => {
-                    const isEditing: boolean = editingProfileId === profile.id;
+                    const profileChannels = allChannels.filter((c) => profile.channelIds.includes(c.id));
 
                     return (
                         <div
@@ -194,68 +336,26 @@ export default function ProfilePage({
                                     marginBottom: "12px",
                                 }}
                             >
-                                {isEditing ? (
-                                    <div
-                                        style={{ display: "flex", gap: "8px", flex: 1, marginRight: "12px" }}
-                                    >
-                                        <input
-                                            type="text"
-                                            value={editNameInput}
-                                            onChange={(
-                                                e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
-                                            ) => setEditNameInput(e.target.value)}
-                                            style={{ flex: 1 }}
-                                        />
-                                        <select
-                                            value={currentTheme}
-                                            onChange={(
-                                                e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>,
-                                            ) => onThemeChange(e.target.value)}
-                                        >
-                                            {Object.keys(themes).map(
-                                                (key: string): React.JSX.Element => (
-                                                    <option
-                                                        key={key}
-                                                        value={key}
-                                                    >
-                                                        {themes[key].name}
-                                                    </option>
-                                                ),
-                                            )}
-                                        </select>
-                                        <button
-                                            className="primary"
-                                            onClick={async (): Promise<void> =>
-                                                await saveProfileEdits(profile.id)
-                                            }
-                                        >
-                                            save
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <h4 style={{ margin: "0 0 4px 0", fontSize: "1.2rem" }}>
-                                            {profile.name}
-                                        </h4>
-                                        <span style={{ fontSize: "0.85em", color: "var(--text-muted)" }}>
-                                            theme: {themes[profile.colorScheme]?.name || profile.colorScheme}
-                                        </span>
-                                    </div>
-                                )}
+                                <div>
+                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1.2rem" }}>
+                                        {profile.name}
+                                    </h4>
+                                    <span style={{ fontSize: "0.85em", color: "var(--text-muted)" }}>
+                                        theme: {themes[profile.colorScheme]?.name || profile.colorScheme}
+                                    </span>
+                                </div>
 
                                 <div style={{ display: "flex", gap: "8px" }}>
-                                    {!isEditing && (
-                                        <button
-                                            className="primary"
-                                            style={{ padding: "6px 12px" }}
-                                            onClick={(): void => startEditing(profile)}
-                                        >
-                                            edit
-                                        </button>
-                                    )}
+                                    <button
+                                        className="primary"
+                                        style={{ padding: "6px 12px" }}
+                                        onClick={() => startEditing(profile)}
+                                    >
+                                        edit profile
+                                    </button>
                                     <button
                                         className="danger"
-                                        onClick={async (): Promise<void> => await handleDelete(profile.id)}
+                                        onClick={async () => await handleDelete(profile.id)}
                                     >
                                         delete
                                     </button>
@@ -279,42 +379,25 @@ export default function ProfilePage({
                                 >
                                     channels:
                                 </p>
-                                {allChannels.length === 0 ? (
+                                {profileChannels.length === 0 ? (
                                     <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
-                                        no channels created yet:
+                                        no channels assigned
                                     </p>
                                 ) : (
-                                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                                        {allChannels.map((channel) => {
-                                            const isChecked = profile.channelIds.includes(channel.id);
-                                            return (
-                                                <label
-                                                    key={channel.id}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "6px",
-                                                        background: isChecked
-                                                            ? "var(--surface)"
-                                                            : "transparent",
-                                                        padding: "6px 10px",
-                                                        borderRadius: "4px",
-                                                        border: "1px solid var(--surface)",
-                                                        cursor: "pointer",
-                                                        fontSize: "0.85rem",
-                                                    }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isChecked}
-                                                        onChange={async (): Promise<void> =>
-                                                            await toggleChannelInProfile(profile, channel.id)
-                                                        }
-                                                    />
-                                                    {channel.name}
-                                                </label>
-                                            );
-                                        })}
+                                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                        {profileChannels.map((channel) => (
+                                            <span
+                                                key={channel.id}
+                                                style={{
+                                                    background: "var(--surface)",
+                                                    padding: "4px 10px",
+                                                    borderRadius: "10px",
+                                                    fontSize: ".85rem",
+                                                }}
+                                            >
+                                                {channel.name}
+                                            </span>
+                                        ))}
                                     </div>
                                 )}
                             </div>

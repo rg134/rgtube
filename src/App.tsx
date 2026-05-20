@@ -16,6 +16,7 @@ import { themes } from "./styles/themes";
 function App(): React.JSX.Element {
     const [activeTab, setActiveTab] = useState<"home" | "profiles" | "channels">("home");
     const [currentTheme, setCurrentTheme] = useState<string>("gruvbox");
+    const [overrideTheme, setOverrideTheme] = useState<string>("");
     const [profiles, _setProfiles] = useState<Profile[]>([]);
     const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
@@ -44,10 +45,12 @@ function App(): React.JSX.Element {
             (p: Profile): boolean => p.id === activeProfileId,
         );
 
-        if (activeProfile) {
+        if(overrideTheme) {
+            setCurrentTheme(overrideTheme);
+        } else if (activeProfile) {
             setCurrentTheme(activeProfile.colorScheme);
         }
-    }, [activeProfileId, profiles]);
+    }, [activeProfileId, profiles, overrideTheme]);
 
     useEffect((): void => {
         const selectedTheme: ThemeColors = themes[currentTheme] || themes["gruvbox"];
@@ -84,6 +87,8 @@ function App(): React.JSX.Element {
                     <ProfilePage
                         onThemeChange={setCurrentTheme}
                         currentTheme={currentTheme}
+                        overrideTheme={overrideTheme}
+                        setOverrideTheme={setOverrideTheme}
                         refreshProfiles={loadProfiles}
                     />
                 )}

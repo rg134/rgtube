@@ -2,7 +2,7 @@ name: Label Automation Manager
 
 on:
     issues:
-        types: [opened, edited, assigned, closed, reopened]
+        types: [opened, edited, assigned, unassigned, closed, reopened]
     pull_request:
         types: [opened, synchronize, closed]
     pull_request_review:
@@ -98,6 +98,12 @@ jobs:
 
                         if (action === 'assigned') {
                            await manageLabels(num, ['Status: In Progress'], false, ['Status: Available']);
+                        }
+
+                        if (action === 'unassigned') {
+                          if (!hasAssignee) {
+                            await manageLabels(num, ['Status: Available'], false, ['Status: In Progress']);
+                          }
                         }
 
                         if (action === 'closed') {

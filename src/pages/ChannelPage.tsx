@@ -25,11 +25,11 @@ export default function ChannelPage(): React.JSX.Element {
     }, []);
 
     const makeChannel = async () => {
-        if(!nameInput.trim()) return;
+        if (!nameInput.trim()) return;
         const newChannel: Channel = {
             id: crypto.randomUUID(),
             name: nameInput,
-            platform: platformInput
+            platform: platformInput,
         };
         await addChannel(newChannel);
         setChannels(await getChannels());
@@ -52,7 +52,9 @@ export default function ChannelPage(): React.JSX.Element {
             />
             <select
                 value={platformInput}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPlatformInput(e.target.value as SupportedPlatform)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setPlatformInput(e.target.value as SupportedPlatform)
+                }
             >
                 <option value="YouTube">YouTube</option>
                 <option value="Odysee">Odysee</option>
@@ -60,7 +62,9 @@ export default function ChannelPage(): React.JSX.Element {
             <button onClick={makeChannel}>create channel</button>
             <ul>
                 {channels.map((channel) => (
-                    <li>{channel.name} - {channel.platform}</li>
+                    <li>
+                        {channel.name} - {channel.platform}
+                    </li>
                 ))}
             </ul>
         </div>

@@ -8,16 +8,13 @@ function App(): React.JSX.Element {
     const [activeTab, setActiveTab] = useState<"home" | "profiles" | "channels">("home");
     return (
         <div>
-            <NavBar activeTab={activeTab} setActiveTab={setActiveTab}/>
-            {activeTab === "home" && (
-                <Home/>
-            )}
-            {activeTab === "profiles" && (
-                <ProfilePage/>
-            )}
-            {activeTab === "channels" && (
-                <ChannelPage/>
-            )}
+            <NavBar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+            />
+            {activeTab === "home" && <Home />}
+            {activeTab === "profiles" && <ProfilePage />}
+            {activeTab === "channels" && <ChannelPage />}
         </div>
     );
 }

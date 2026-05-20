@@ -27,7 +27,7 @@ export default function ProfilePage(): React.JSX.Element {
             id: crypto.randomUUID(),
             name: `cool profile`,
             colorScheme: "red",
-            channelIds: []
+            channelIds: [],
         };
         await addProfile(newProfile);
         setProfiles(await getProfiles());

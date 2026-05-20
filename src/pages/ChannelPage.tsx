@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
+
 import { initDB, getChannels, addChannel } from "../../db/api";
+
 import { Channel } from "../../interfaces/Channel";
+
 import { SupportedPlatform } from "../../types/types";
 
 export default function ChannelPage(): React.JSX.Element {

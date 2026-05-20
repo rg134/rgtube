@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 
 import { Profile } from "../../interfaces/Profile";
 import { Channel } from "../../interfaces/Channel";
+import { ProfilePageProps } from "../../interfaces/ProfilePageProps";
 
 import { themes } from "../styles/themes";
 
 import { initDB, getProfiles, addProfile, deleteProfile, updateProfile, getChannels } from "../../db/api";
-
-import { ProfilePageProps } from "../../types/types";
 
 export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePageProps): React.JSX.Element {
     const [profiles, setProfiles] = useState<Profile[]>([]);

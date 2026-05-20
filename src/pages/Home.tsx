@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+
 import { invoke } from "@tauri-apps/api/core";
+
 import { getSettings, updateSettings } from "../../db/api";
 
 export default function Home(): React.JSX.Element {

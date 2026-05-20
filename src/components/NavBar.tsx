@@ -1,6 +1,6 @@
 import React from "react";
 
-import { NavBarProps } from "../../types/types";
+import { NavBarProps } from "../../interfaces/NavBarProps";
 
 export default function NavBar({ activeTab, setActiveTab }: NavBarProps): React.JSX.Element {
     return (

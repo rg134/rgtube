@@ -1,17 +1,42 @@
 import React, { useState, useEffect } from "react";
-import ProfilePage from "./pages/ProfilePage";
-import NavBar from "./components/NavBar";
+
 import Home from "./pages/Home";
+import ProfilePage from "./pages/ProfilePage";
 import ChannelPage from "./pages/ChannelPage";
-import { initDB } from "../db/api";
+
+import NavBar from "./components/NavBar";
+
+import { Profile } from "../interfaces/Profile";
+import { ThemeColors } from "../interfaces/ThemeColors";
+
+import { getProfiles, initDB } from "../db/api";
+
 import { themes } from "./styles/themes";
-import { ThemeColors } from "../types/types";
 
 function App(): React.JSX.Element {
     const [activeTab, setActiveTab] = useState<"home" | "profiles" | "channels">("home");
-    const [currentTheme, setCurrentTheme] = useState<string>("catppuccin-mocha");
+    const [currentTheme, setCurrentTheme] = useState<string>("gruvbox");
+    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
-    useEffect(() => {
+    const loadProfiles: () => Promise<void> = async (): Promise<void> => {
+        const loadedProfiles: Profile[] = await getProfiles[];
+
+        if (loadProfiles.length > 0 && !activeProfileId) {
+            setActiveProfileId(loadProfiles[0].id)
+        } else if (loadedProfiles.length === 0) {
+            setActiveProfileId(null);
+        }
+    }
+
+    useEffect((): void => {
+        async function setup(): Promise<void> {
+            await initDB();
+            await loadProfiles();
+        }
+    })
+
+    useEffect((): void => {
         const selectedTheme: ThemeColors = themes[currentTheme] || themes["catppuccin-mocha"];
         const root: HTMLElement = document.documentElement;
 

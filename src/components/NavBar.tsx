@@ -1,9 +1,6 @@
 import React from "react";
 
-interface NavBarProps {
-    activeTab: "home" | "profiles" | "channels";
-    setActiveTab: (tab: "home" | "profiles" | "channels") => void;
-}
+import { NavBarProps } from "../../types/types";
 
 export default function NavBar({ activeTab, setActiveTab }: NavBarProps): React.JSX.Element {
     return (
@@ -12,29 +9,30 @@ export default function NavBar({ activeTab, setActiveTab }: NavBarProps): React.
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "45px",
+                height: "50px",
                 width: "100%",
-                backgroundColor: "#272727",
+                backgroundColor: "var(--surface)",
+                borderBottom: "1px solid var(--bg)",
             }}
         >
-            <div style={{ display: "flex", gap: "6px" }}>
+            <div style={{ display: "flex", gap: "12px" }}>
                 <button
                     onClick={() => setActiveTab("home")}
-                    className={activeTab === "home" ? "nav-button.active" : "nav-button"}
+                    className={activeTab === "home" ? "nav-button active" : "nav-button"}
                 >
                     Home
                 </button>
 
                 <button
                     onClick={() => setActiveTab("profiles")}
-                    className={activeTab === "profiles" ? "nav-button.active" : "nav-button"}
+                    className={activeTab === "profiles" ? "nav-button active" : "nav-button"}
                 >
                     Profiles
                 </button>
 
                 <button
                     onClick={() => setActiveTab("channels")}
-                    className={activeTab === "channels" ? "nav-button.active" : "nav-button"}
+                    className={activeTab === "channels" ? "nav-button active" : "nav-button"}
                 >
                     Channels
                 </button>

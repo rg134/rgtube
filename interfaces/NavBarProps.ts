@@ -1,7 +1,7 @@
 export interface NavBarProps {
     activeTab: "home" | "profiles" | "channels";
     setActiveTab: (tab: "home" | "profiles" | "channels") => void;
-    profiles: string[];
+    profiles: { name: string; id: string }[];
     activeProfileId: string | null;
     setActiveProfileId: (id: string) => void;
 }

@@ -22,8 +22,10 @@ function App(): React.JSX.Element {
     const loadProfiles: () => Promise<void> = async (): Promise<void> => {
         const loadedProfiles: Profile[] = await getProfiles();
 
-        if (loadProfiles.length > 0 && !activeProfileId) {
-            setActiveProfileId(loadProfiles[0].id);
+        _setProfiles(loadedProfiles);
+
+        if (loadedProfiles.length > 0 && !activeProfileId) {
+            setActiveProfileId(loadedProfiles[0].id);
         } else if (loadedProfiles.length === 0) {
             setActiveProfileId(null);
         }
@@ -67,7 +69,7 @@ function App(): React.JSX.Element {
             <NavBar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                profiles={profiles.map((p: Profile): string => p.id)}
+                profiles={profiles.map((p: Profile) => ({ id: p.id, name: p.name }))}
                 activeProfileId={activeProfileId}
                 setActiveProfileId={setActiveProfileId}
             />
@@ -82,6 +84,7 @@ function App(): React.JSX.Element {
                     <ProfilePage
                         onThemeChange={setCurrentTheme}
                         currentTheme={currentTheme}
+                        refreshProfiles={loadProfiles}
                     />
                 )}
                 {activeTab === "channels" && <ChannelPage />}

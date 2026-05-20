@@ -17,6 +17,14 @@ export default function Home({ activeProfile, refreshProfiles }: HomeProps): Rea
         getChannels().then(setChannels);
     }, []);
 
+    if (!activeProfile) {
+        return (
+            <div style={{ textAlign: "center", marginTop: "40px", color: "var(--text-muted)" }}>
+                <p>no active profile selected. please create or select a profile first.</p>
+            </div>
+        );
+    }
+
     const handleDirChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void> = async (
         e: React.ChangeEvent<HTMLInputElement>,
     ): Promise<void> => {

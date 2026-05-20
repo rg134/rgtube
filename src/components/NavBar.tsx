@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 
 import { NavBarProps } from "../../interfaces/NavBarProps";
-import { Profile } from "../../interfaces/Profile";
 
 export default function NavBar({
     activeTab,
     setActiveTab,
     activeProfileId,
     setActiveProfileId,
+    profiles,
 }: NavBarProps): React.JSX.Element {
-    const [m_profiles, setProfiles] = useState<Profile[]>([]);
-
     return (
         <nav
             style={{
@@ -55,7 +53,7 @@ export default function NavBar({
                     justifyContent: "flex-end",
                 }}
             >
-                {m_profiles.length > 0 && (
+                {profiles.length > 0 && (
                     <>
                         <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>profile:</span>
                         <select
@@ -79,7 +77,7 @@ export default function NavBar({
                             >
                                 select...
                             </option>
-                            {m_profiles.map((p) => (
+                            {profiles.map((p) => (
                                 <option
                                     key={p.id}
                                     value={p.id}

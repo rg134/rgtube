@@ -81,11 +81,13 @@ export default function ProfilePage({
         await updateProfile(id, {
             name: editNameInput.trim(),
             colorScheme: currentTheme,
+            downloadDir: editDownloadDirInput.trim(),
         });
 
         setEditingProfileId(null);
 
         await loadData();
+        await refreshProfiles();
     };
 
     const toggleChannelInProfile: (profile: Profile, channelId: string) => Promise<void> = async (
@@ -99,6 +101,7 @@ export default function ProfilePage({
         });
 
         await loadData();
+        await refreshProfiles();
     };
 
     if (loading) {
@@ -132,20 +135,31 @@ export default function ProfilePage({
                         }
                         style={{ flex: 1, minWidth: "200px" }}
                     />
+                    <input
+                        type="text"
+                        placeholder="default download folder (optional)"
+                        value={downloadDirInput}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>): void =>
+                            setDownloadDirInput(e.target.value)
+                        }
+                        style={{ flex: 1, minWidth: "200px" }}
+                    />
                     <select
                         value={currentTheme}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) =>
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void =>
                             onThemeChange(e.target.value)
                         }
                     >
-                        {Object.keys(themes).map((key) => (
-                            <option
-                                key={key}
-                                value={key}
-                            >
-                                {themes[key].name}
-                            </option>
-                        ))}
+                        {Object.keys(themes).map(
+                            (key: string): React.JSX.Element => (
+                                <option
+                                    key={key}
+                                    value={key}
+                                >
+                                    {themes[key].name}
+                                </option>
+                            ),
+                        )}
                     </select>
                     <button
                         className="primary"

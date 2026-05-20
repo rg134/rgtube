@@ -51,9 +51,13 @@ export async function addVideo(newVideo: Video): Promise<void> {
     await store.set("videos", [...((await store.get<Video[]>("videos")) || []), ...[newVideo]]);
 }
 
+export async function getSettings(): Promise<Settings> {
+    return (await store.get<Settings>("settings")) || DefaultDB.settings;
+}
+
 export async function updateSettings(newSettings: Partial<Settings>): Promise<void> {
     await store.set("settings", {
         ...((await store.get<Settings>("settings")) || DefaultDB.settings),
-        ...[newSettings],
+        ...newSettings,
     });
 }

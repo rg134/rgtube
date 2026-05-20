@@ -2,21 +2,27 @@ import React, { useEffect, useState } from "react";
 
 import { Profile } from "../../interfaces/Profile";
 import { Channel } from "../../interfaces/Channel";
+import { ProfilePageProps } from "../../interfaces/ProfilePageProps";
 
 import { themes } from "../styles/themes";
 
 import { initDB, getProfiles, addProfile, deleteProfile, updateProfile, getChannels } from "../../db/api";
 
-import { ProfilePageProps } from "../../types/types";
-
-export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePageProps): React.JSX.Element {
+export default function ProfilePage({
+    currentTheme,
+    onThemeChange,
+    refreshProfiles,
+}: ProfilePageProps): React.JSX.Element {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [allChannels, setAllChannels] = useState<Channel[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [profileNameInput, setProfileNameInput] = useState<string>("");
+    const [downloadDirInput, setDownloadDirInput] = useState<string>("");
+
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
     const [editNameInput, setEditNameInput] = useState<string>("");
+    const [editDownloadDirInput, setEditDownloadDirInput] = useState<string>("");
 
     const loadData: () => Promise<void> = async (): Promise<void> => {
         try {
@@ -44,21 +50,26 @@ export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePage
             name: profileNameInput.trim(),
             colorScheme: currentTheme,
             channelIds: [],
+            downloadDir: downloadDirInput.trim(),
         });
 
         setProfileNameInput("");
+        setDownloadDirInput("");
 
         await loadData();
+        await refreshProfiles();
     };
 
     const handleDelete: (id: string) => Promise<void> = async (id: string): Promise<void> => {
         await deleteProfile(id);
         await loadData();
+        await refreshProfiles();
     };
 
     const startEditing: (profile: Profile) => void = (profile: Profile): void => {
         setEditingProfileId(profile.id);
         setEditNameInput(profile.name);
+        setEditDownloadDirInput(profile.downloadDir || "");
         onThemeChange(profile.colorScheme);
     };
 
@@ -70,11 +81,13 @@ export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePage
         await updateProfile(id, {
             name: editNameInput.trim(),
             colorScheme: currentTheme,
+            downloadDir: editDownloadDirInput.trim(),
         });
 
         setEditingProfileId(null);
 
         await loadData();
+        await refreshProfiles();
     };
 
     const toggleChannelInProfile: (profile: Profile, channelId: string) => Promise<void> = async (
@@ -88,6 +101,7 @@ export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePage
         });
 
         await loadData();
+        await refreshProfiles();
     };
 
     if (loading) {
@@ -121,20 +135,31 @@ export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePage
                         }
                         style={{ flex: 1, minWidth: "200px" }}
                     />
+                    <input
+                        type="text"
+                        placeholder="default download folder (optional)"
+                        value={downloadDirInput}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>): void =>
+                            setDownloadDirInput(e.target.value)
+                        }
+                        style={{ flex: 1, minWidth: "200px" }}
+                    />
                     <select
                         value={currentTheme}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) =>
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void =>
                             onThemeChange(e.target.value)
                         }
                     >
-                        {Object.keys(themes).map((key) => (
-                            <option
-                                key={key}
-                                value={key}
-                            >
-                                {themes[key].name}
-                            </option>
-                        ))}
+                        {Object.keys(themes).map(
+                            (key: string): React.JSX.Element => (
+                                <option
+                                    key={key}
+                                    value={key}
+                                >
+                                    {themes[key].name}
+                                </option>
+                            ),
+                        )}
                     </select>
                     <button
                         className="primary"

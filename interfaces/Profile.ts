@@ -3,4 +3,5 @@ export interface Profile {
     name: string;
     colorScheme: string;
     channelIds: string[];
+    downloadDir: string;
 }

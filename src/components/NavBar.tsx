@@ -1,8 +1,14 @@
 import React from "react";
 
-import { NavBarProps } from "../../types/types";
+import { NavBarProps } from "../../interfaces/NavBarProps";
 
-export default function NavBar({ activeTab, setActiveTab }: NavBarProps): React.JSX.Element {
+export default function NavBar({
+    activeTab,
+    setActiveTab,
+    activeProfileId,
+    setActiveProfileId,
+    profiles,
+}: NavBarProps): React.JSX.Element {
     return (
         <nav
             style={{
@@ -17,25 +23,71 @@ export default function NavBar({ activeTab, setActiveTab }: NavBarProps): React.
         >
             <div style={{ display: "flex", gap: "12px" }}>
                 <button
-                    onClick={() => setActiveTab("home")}
+                    onClick={(): void => setActiveTab("home")}
                     className={activeTab === "home" ? "nav-button active" : "nav-button"}
                 >
                     Home
                 </button>
 
                 <button
-                    onClick={() => setActiveTab("profiles")}
+                    onClick={(): void => setActiveTab("profiles")}
                     className={activeTab === "profiles" ? "nav-button active" : "nav-button"}
                 >
                     Profiles
                 </button>
 
                 <button
-                    onClick={() => setActiveTab("channels")}
+                    onClick={(): void => setActiveTab("channels")}
                     className={activeTab === "channels" ? "nav-button active" : "nav-button"}
                 >
                     Channels
                 </button>
+            </div>
+
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    width: "200px",
+                    justifyContent: "flex-end",
+                }}
+            >
+                {profiles.length > 0 && (
+                    <>
+                        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>profile:</span>
+                        <select
+                            value={activeProfileId || ""}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                setActiveProfileId(e.target.value)
+                            }
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: "var(--bg)",
+                                color: "var(--text)",
+                                border: "1px solid var(--surface)",
+                                borderRadius: "4px",
+                                outline: "none",
+                                cursor: "pointer",
+                            }}
+                        >
+                            <option
+                                value=""
+                                disabled
+                            >
+                                select...
+                            </option>
+                            {profiles.map((p) => (
+                                <option
+                                    key={p.id}
+                                    value={p.id}
+                                >
+                                    {p.name}
+                                </option>
+                            ))}
+                        </select>
+                    </>
+                )}
             </div>
         </nav>
     );

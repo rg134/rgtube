@@ -1,4 +1,4 @@
-import { ThemeColors } from "../../types/types";
+import { ThemeColors } from "../../interfaces/ThemeColors";
 
 export const themes: Record<string, ThemeColors> = {
     gruvbox: {

@@ -74,19 +74,19 @@ jobs:
 
                         if (action === 'opened') {
                           let add = [];
-                          
+
                           if (!hasPriority && !isQuestion) add.push('Priority: Low');
 
                           if (!hasAssignee) add.push('Status: Available');
                           else add.push('Status: In Progress');
-                          
+
                           if (isBot) add.push('Type: Maintenance');
 
                           if (isBlocked(issue.body)) {
                             add = add.filter(l => !l.startsWith('Status:'));
                             add.push('Status: Blocked');
                           }
-                          
+
                           await manageLabels(num, add, true);
                         }
 
@@ -107,7 +107,7 @@ jobs:
 
                           const query = `repo:${owner}/${repo} is:issue is:open "Blocked by #${num}"`;
                           const { data: searchResults } = await github.rest.search.issuesAndPullRequests({ q: query });
-                          
+
                           for (const blockedIssue of searchResults.items) {
                             const bNum = blockedIssue.number;
                             const bHasAssignee = blockedIssue.assignees && blockedIssue.assignees.length > 0;
@@ -134,7 +134,7 @@ jobs:
                           if (!hasPriority) add.push('Priority: Low');
                           if (!hasStatus) add.push('Status: Review Needed');
                           if (isBot) add.push('Type: Maintenance');
-                          
+
                           await manageLabels(num, add, false);
 
                           const linked = getLinkedIssues(pr.body);

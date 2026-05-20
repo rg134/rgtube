@@ -1,0 +1,92 @@
+/* Ensure the absolute root boundaries use our target colors */
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--surface) !important;
+    color: var(--text);
+    font-family: sans-serif;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+label {
+    color: var(--text);
+}
+
+.nav-button {
+    padding: 8px 16px;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.nav-button.active {
+    background-color: var(--bg);
+    color: var(--accent);
+    border-radius: 4px;
+}
+
+input[type="text"],
+select {
+    background-color: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--surface);
+    border-radius: 4px;
+    padding: 10px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+select:focus {
+    border-color: var(--accent);
+}
+
+button.primary {
+    background-color: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+button.primary:hover {
+    opacity: 0.9;
+}
+
+button.danger {
+    background-color: transparent;
+    color: #ea6962;
+    border: 1px solid #ea6962;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+button.danger:hover {
+    background-color: #ea6962;
+    color: var(--bg);
+}

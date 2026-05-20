@@ -21,6 +21,20 @@ export async function initDB(): Promise<void> {
     }
 }
 
+//
+
+export async function getChannels(): Promise<Channel[]> {
+    return (await store.get<Channel[]>("channels")) || [];
+}
+
+export async function getProfiles(): Promise<Profile[]> {
+    return (await store.get<Profile[]>("profiles")) || [];
+}
+
+export async function getSettings(): Promise<Settings> {
+    return (await store.get<Settings>("settings")) || DefaultDB.settings;
+}
+
 export async function getDB(): Promise<RGTubeDatabase> {
     return {
         settings: (await store.get<Settings>("settings")) || DefaultDB.settings,
@@ -31,29 +45,43 @@ export async function getDB(): Promise<RGTubeDatabase> {
     };
 }
 
-export async function getProfiles(): Promise<Profile[]> {
-    return (await store.get<Profile[]>("profiles")) || [];
-}
+//
 
 export async function addProfile(newProfile: Profile): Promise<void> {
-    await store.set("profiles", [...(await getProfiles()), ...[newProfile]] satisfies Profile[]);
-}
-
-export async function getChannels(): Promise<Channel[]> {
-    return (await store.get<Channel[]>("channels")) || [];
+    await store.set("profiles", [...(await getProfiles()), newProfile]);
 }
 
 export async function addChannel(newChannel: Channel): Promise<void> {
-    await store.set("channels", [...(await getChannels()), ...[newChannel]] satisfies Channel[]);
+    await store.set("channels", [...(await getChannels()), newChannel]);
 }
 
-export async function addVideo(newVideo: Video): Promise<void> {
-    await store.set("videos", [...((await store.get<Video[]>("videos")) || []), ...[newVideo]]);
+//
+
+export async function saveProfiles(profiles: Profile[]): Promise<void> {
+    await store.set("profiles", profiles);
 }
+
+//
+
+export async function deleteProfile(id: string): Promise<void> {
+    await store.set(
+        "profiles",
+        (await getProfiles()).filter((p: Profile): boolean => p.id !== id),
+    );
+}
+
+//
 
 export async function updateSettings(newSettings: Partial<Settings>): Promise<void> {
     await store.set("settings", {
         ...((await store.get<Settings>("settings")) || DefaultDB.settings),
-        ...[newSettings],
+        ...newSettings,
     });
+}
+
+export async function updateProfile(id: string, updatedFields: Partial<Profile>): Promise<void> {
+    await store.set(
+        "profiles",
+        (await getProfiles()).map((p: Profile): Profile => (p.id === id ? { ...p, ...updatedFields } : p)),
+    );
 }

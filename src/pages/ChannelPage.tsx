@@ -10,62 +10,109 @@ export default function ChannelPage(): React.JSX.Element {
     const [nameInput, setNameInput] = useState<string>("");
     const [platformInput, setPlatformInput] = useState<SupportedPlatform>("YouTube");
 
-    useEffect(() => {
-        async function loadDatabase() {
-            try {
-                await initDB();
-                setChannels(await getChannels());
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
+    const updateChannelFeed = async (): Promise<void> => {
+        try {
+            await initDB();
+            setChannels(await getChannels());
+        } catch (e: unknown) {
+            console.error(e);
+        } finally {
+            setLoading(false);
         }
-        loadDatabase();
+    };
+
+    useEffect((): void => {
+        updateChannelFeed();
     }, []);
 
-    const makeChannel = async () => {
-        if (!nameInput.trim()) return;
+    const makeChannel = async (): Promise<void> => {
+        if (!nameInput.trim()) {
+            return;
+        }
+
         const newChannel: Channel = {
             id: crypto.randomUUID(),
-            name: nameInput,
+            name: nameInput.trim(),
             platform: platformInput,
         };
-        await addChannel(newChannel);
-        setChannels(await getChannels());
 
+        await addChannel(newChannel);
         setNameInput("");
+        await updateChannelFeed();
     };
 
     if (loading) {
-        return <div>loading</div>;
+        return <div style={{ color: "var(--text-muted)" }}>loading...</div>;
     }
 
     return (
-        <div>
-            <p>channels</p>
-            <input
-                type="text"
-                placeholder="name"
-                value={nameInput}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameInput(e.target.value)}
-            />
-            <select
-                value={platformInput}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setPlatformInput(e.target.value as SupportedPlatform)
-                }
+        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+            <h2>channels</h2>
+
+            <div
+                style={{
+                    background: "var(--bg)",
+                    padding: "20px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--surface)",
+                    display: "flex",
+                    gap: "10px",
+                    marginBottom: "24px",
+                }}
             >
-                <option value="YouTube">YouTube</option>
-                <option value="Odysee">Odysee</option>
-            </select>
-            <button onClick={makeChannel}>create channel</button>
-            <ul>
+                <input
+                    type="text"
+                    placeholder="channel name"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    style={{ flex: 1 }}
+                />
+                <select
+                    value={platformInput}
+                    onChange={(e) => setPlatformInput(e.target.value as SupportedPlatform)}
+                >
+                    <option value="YouTube">YouTube</option>
+                    <option value="Odysee">Odysee</option>
+                </select>
+                <button
+                    className="primary"
+                    onClick={makeChannel}
+                >
+                    add feed
+                </button>
+            </div>
+
+            <h3>channels</h3>
+            <ul
+                style={{
+                    listStyleType: "none",
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                }}
+            >
                 {channels.map((channel) => (
-                    <li>
-                        {channel.name} - {channel.platform}
+                    <li
+                        key={channel.id}
+                        style={{
+                            background: "var(--bg)",
+                            padding: "12px 16px",
+                            borderRadius: "4px",
+                            border: "1px solid var(--surface)",
+                            display: "flex",
+                            justifyContent: "space-between",
+                        }}
+                    >
+                        <span>{channel.name}</span>
+                        <span style={{ fontSize: "0.85rem", color: "var(--accent)" }}>
+                            {channel.platform}
+                        </span>
                     </li>
                 ))}
+                {channels.length === 0 && (
+                    <p style={{ color: "var(--text-muted)" }}>nothing added just yet</p>
+                )}
             </ul>
         </div>
     );

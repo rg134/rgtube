@@ -16,28 +16,39 @@ import { themes } from "./styles/themes";
 function App(): React.JSX.Element {
     const [activeTab, setActiveTab] = useState<"home" | "profiles" | "channels">("home");
     const [currentTheme, setCurrentTheme] = useState<string>("gruvbox");
-    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [profiles, _setProfiles] = useState<Profile[]>([]);
     const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
     const loadProfiles: () => Promise<void> = async (): Promise<void> => {
-        const loadedProfiles: Profile[] = await getProfiles[];
+        const loadedProfiles: Profile[] = await getProfiles();
 
         if (loadProfiles.length > 0 && !activeProfileId) {
-            setActiveProfileId(loadProfiles[0].id)
+            setActiveProfileId(loadProfiles[0].id);
         } else if (loadedProfiles.length === 0) {
             setActiveProfileId(null);
         }
-    }
+    };
 
     useEffect((): void => {
         async function setup(): Promise<void> {
             await initDB();
             await loadProfiles();
         }
-    })
+        setup();
+    }, []);
 
     useEffect((): void => {
-        const selectedTheme: ThemeColors = themes[currentTheme] || themes["catppuccin-mocha"];
+        const activeProfile: Profile | undefined = profiles.find(
+            (p: Profile): boolean => p.id === activeProfileId,
+        );
+
+        if (activeProfile) {
+            setCurrentTheme(activeProfile.colorScheme);
+        }
+    }, [activeProfileId, profiles]);
+
+    useEffect((): void => {
+        const selectedTheme: ThemeColors = themes[currentTheme] || themes["gruvbox"];
         const root: HTMLElement = document.documentElement;
 
         root.style.setProperty("--bg", selectedTheme.bg);
@@ -47,21 +58,26 @@ function App(): React.JSX.Element {
         root.style.setProperty("--accent", selectedTheme.accent);
     }, [currentTheme]);
 
-    useEffect((): void => {
-        async function setup(): Promise<void> {
-            await initDB();
-        }
-        setup();
-    }, []);
+    const activeProfile: Profile | undefined = profiles.find(
+        (p: Profile): boolean => p.id === activeProfileId,
+    );
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "var(--surface)", color: "var(--text)" }}>
             <NavBar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
+                profiles={profiles.map((p: Profile): string => p.id)}
+                activeProfileId={activeProfileId}
+                setActiveProfileId={setActiveProfileId}
             />
             <div style={{ padding: "20px" }}>
-                {activeTab === "home" && <Home />}
+                {activeTab === "home" && (
+                    <Home
+                        activeProfile={activeProfile}
+                        refreshProfiles={loadProfiles}
+                    />
+                )}
                 {activeTab === "profiles" && (
                     <ProfilePage
                         onThemeChange={setCurrentTheme}

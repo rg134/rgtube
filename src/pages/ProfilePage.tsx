@@ -8,14 +8,21 @@ import { themes } from "../styles/themes";
 
 import { initDB, getProfiles, addProfile, deleteProfile, updateProfile, getChannels } from "../../db/api";
 
-export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePageProps): React.JSX.Element {
+export default function ProfilePage({
+    currentTheme,
+    onThemeChange,
+    refreshProfiles,
+}: ProfilePageProps): React.JSX.Element {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [allChannels, setAllChannels] = useState<Channel[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [profileNameInput, setProfileNameInput] = useState<string>("");
+    const [downloadDirInput, setDownloadDirInput] = useState<string>("");
+
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
     const [editNameInput, setEditNameInput] = useState<string>("");
+    const [editDownloadDirInput, setEditDownloadDirInput] = useState<string>("");
 
     const loadData: () => Promise<void> = async (): Promise<void> => {
         try {
@@ -43,21 +50,26 @@ export default function ProfilePage({ currentTheme, onThemeChange }: ProfilePage
             name: profileNameInput.trim(),
             colorScheme: currentTheme,
             channelIds: [],
+            downloadDir: downloadDirInput.trim(),
         });
 
         setProfileNameInput("");
+        setDownloadDirInput("");
 
         await loadData();
+        await refreshProfiles();
     };
 
     const handleDelete: (id: string) => Promise<void> = async (id: string): Promise<void> => {
         await deleteProfile(id);
         await loadData();
+        await refreshProfiles();
     };
 
     const startEditing: (profile: Profile) => void = (profile: Profile): void => {
         setEditingProfileId(profile.id);
         setEditNameInput(profile.name);
+        setEditDownloadDirInput(profile.downloadDir || "");
         onThemeChange(profile.colorScheme);
     };
 

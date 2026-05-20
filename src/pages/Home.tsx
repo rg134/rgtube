@@ -2,27 +2,27 @@ import React, { useState, useEffect } from "react";
 
 import { invoke } from "@tauri-apps/api/core";
 
-import { getSettings, updateSettings } from "../../db/api";
+import { HomeProps } from "../../interfaces/HomeProps";
+import { Channel } from "../../interfaces/Channel";
 
-export default function Home(): React.JSX.Element {
-    const [downloadDir, setDownloadDir] = useState<string>("");
+import { getChannels, updateProfile } from "../../db/api";
+
+export default function Home({ activeProfile, refreshProfiles }: HomeProps): React.JSX.Element {
     const [videoUrl, setVideoUrl] = useState<string>("");
     const [status, setStatus] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
+    const [channels, setChannels] = useState<Channel[]>([]);
 
-    useEffect(() => {
-        async function loadSettings() {
-            setDownloadDir((await getSettings()).downloadDir || "");
-        }
-        loadSettings();
+    useEffect((): void => {
+        getChannels().then(setChannels);
     }, []);
 
     const handleDirChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void> = async (
         e: React.ChangeEvent<HTMLInputElement>,
     ): Promise<void> => {
-        const value: string = e.target.value;
-        setDownloadDir(value);
-        await updateSettings({ downloadDir: value });
+        const value = e.target.value;
+        await updateProfile(activeProfile!.id, { downloadDir: value });
+        await refreshProfiles();
     };
 
     const handleDownload: () => Promise<void> = async (): Promise<void> => {
@@ -30,8 +30,8 @@ export default function Home(): React.JSX.Element {
             setStatus("please provide an url");
             return;
         }
-        if (!downloadDir.trim()) {
-            setStatus("please provide a directory path");
+        if (!activeProfile!.downloadDir?.trim()) {
+            setStatus("please select a path");
             return;
         }
 
@@ -41,7 +41,7 @@ export default function Home(): React.JSX.Element {
         try {
             const response: string = await invoke<string>("download_video", {
                 videoUrl: videoUrl.trim(),
-                downloadDir: downloadDir.trim(),
+                downloadDir: activeProfile!.downloadDir.trim(),
             });
             setStatus(`success: ${response}`);
             setVideoUrl("");
@@ -52,14 +52,16 @@ export default function Home(): React.JSX.Element {
         }
     };
 
+    const activeChannels = channels.filter((c: Channel): boolean => activeProfile!.channelIds.includes(c.id));
+
     return (
-        <div style={{ maxWidth: "600px", margin: "40px auto", padding: "0 20px" }}>
-            <div style={{ textAlign: "center", marginBottom: "30px" }}>
+        <div style={{ maxWidth: "800px", margin: "40px auto", padding: "0 20px" }}>
+            <div style={{ textAlign: "center", marginBottom: "40px" }}>
                 <h1 style={{ color: "var(--accent)", margin: "0 0 8px 0" }}>rgtube</h1>
                 <p style={{ color: "var(--text-muted)", margin: 0 }}>youtube in zen mode</p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
                 <div
                     style={{
                         background: "var(--bg)",
@@ -68,20 +70,13 @@ export default function Home(): React.JSX.Element {
                         border: "1px solid var(--surface)",
                     }}
                 >
-                    <label
-                        style={{
-                            display: "block",
-                            marginBottom: "8px",
-                            fontWeight: "bold",
-                            color: "var(--text)",
-                        }}
-                    >
-                        target folder path:
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
+                        download folder for {activeProfile!.name}:
                     </label>
                     <input
                         type="text"
                         placeholder="e.g. /home/user/Videos/rgtube"
-                        value={downloadDir}
+                        value={activeProfile!.downloadDir || ""}
                         onChange={handleDirChange}
                         style={{
                             width: "100%",
@@ -95,6 +90,7 @@ export default function Home(): React.JSX.Element {
                         }}
                     />
                 </div>
+
                 <div
                     style={{
                         background: "var(--bg)",
@@ -103,23 +99,12 @@ export default function Home(): React.JSX.Element {
                         border: "1px solid var(--surface)",
                     }}
                 >
-                    <label
-                        style={{
-                            display: "block",
-                            marginBottom: "8px",
-                            fontWeight: "bold",
-                            color: "var(--text)",
-                        }}
-                    >
-                        link:
-                    </label>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>link:</label>
                     <input
                         type="text"
                         placeholder="https://www.youtube.com/watch?v=..."
                         value={videoUrl}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>): void =>
-                            setVideoUrl(e.target.value)
-                        }
+                        onChange={(e) => setVideoUrl(e.target.value)}
                         disabled={loading}
                         style={{
                             width: "100%",
@@ -133,7 +118,6 @@ export default function Home(): React.JSX.Element {
                             outline: "none",
                         }}
                     />
-
                     <button
                         onClick={handleDownload}
                         disabled={loading}
@@ -152,6 +136,7 @@ export default function Home(): React.JSX.Element {
                         {loading ? "processing" : "download"}
                     </button>
                 </div>
+
                 {status && (
                     <div
                         style={{
@@ -164,6 +149,74 @@ export default function Home(): React.JSX.Element {
                         }}
                     >
                         <strong>status:</strong> {status}
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <h2
+                    style={{
+                        borderBottom: "1px solid var(--surface)",
+                        paddingBottom: "8px",
+                        marginBottom: "20px",
+                    }}
+                >
+                    feed for {activeProfile!.name}
+                </h2>
+
+                {activeChannels.length === 0 ? (
+                    <p style={{ color: "var(--text-muted)", textAlign: "center", padding: "20px" }}>
+                        no channels added to this profile yet.
+                    </p>
+                ) : (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                            gap: "16px",
+                        }}
+                    >
+                        {activeChannels.map((channel) => (
+                            <div
+                                key={channel.id}
+                                style={{
+                                    background: "var(--bg)",
+                                    padding: "16px",
+                                    borderRadius: "8px",
+                                    border: "1px solid var(--surface)",
+                                }}
+                            >
+                                <h4 style={{ margin: "0 0 8px 0", color: "var(--accent)" }}>
+                                    {channel.name}
+                                </h4>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "8px",
+                                        marginTop: "12px",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            height: "135px",
+                                            backgroundColor: "var(--surface)",
+                                            borderRadius: "4px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                                            thumbnail placeholder
+                                        </span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text)" }}>
+                                        Latest Upload Mock
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

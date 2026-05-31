@@ -4,4 +4,6 @@ export interface Video {
     title: string;
     localFilePath: string;
     downloadedAt: number; // unix timestamp
+    stoppingPoint: number;
+    watched: boolean;
 }
